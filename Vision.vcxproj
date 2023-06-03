@@ -134,12 +134,15 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="source\common\include\common.h" />
+    <ClInclude Include="source\core\include\vmemory.h" />
     <ClInclude Include="source\system\include\moduleOpenGL.h" />
     <ClInclude Include="source\system\include\moduleSDL.h" />
     <ClInclude Include="source\thirdparty\include\thirdparty.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\common\common.cpp" />
+    <ClCompile Include="source\core\vmemory.cpp" />
+    <ClCompile Include="source\system\moduleOpenGL.cpp" />
     <ClCompile Include="source\system\moduleSDL.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

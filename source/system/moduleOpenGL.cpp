@@ -1,49 +1,35 @@
-#include "moduleOpenGL.h"
+#include "include/moduleOpenGL.h"
 
-#include <common.h>
+#include <common/include/common.h>
 #include <fstream>
-#include <glm/glm.hpp>
 #include <iostream>
+#include <thirdparty/include/thirdparty.h>
 
-namespace GameDisplay 
+namespace Vision 
 { 
-namespace GL
+namespace System
 {
 //********************************
 //     Class GraphicData
 //********************************
 //----------------------------------------------------------------
-GraphicData::GraphicData(Memory::Allocator& allocator)
+GraphicData::GraphicData(Core::Allocator& allocator)
         : mAllocator(allocator)
         , mVertices(nullptr)
         , mIndices(nullptr)
-        , mTransform(1.0f)
-        , mVertexCount(0)
-        , mIndexCount(0)
-        , mDrawMode(GL_TRIANGLES)
+        , mMatrixTransform(nullptr)
 {}
 
 //----------------------------------------------------------------
-GraphicData::GraphicData(Memory::Allocator& allocator, std::initializer_list<GLfloat> vertices, std::initializer_list<GLuint> indices, const TransformMatrix transform /*= TransformMatrix(1.0f)*/, const size_t drawMode /*= GL_TRIANGLES*/)
-        : mAllocator(allocator)
-    {
-        Load(vertices, indices, transform, drawMode);
-    }
-
-//----------------------------------------------------------------
-void GraphicData::Load(std::initializer_list<GLfloat> vertices, std::initializer_list<GLuint> indices, const TransformMatrix transform, size_t drawMode = GL_TRIANGLES)
+GraphicData::GraphicData(Core::Allocator& allocator, std::initializer_list<GLfloat> vertices, std::initializer_list<GLuint> indices, const Types::MatrixTransform transform /*= TransformMatrix(1.0f)*/, const size_t drawMode /*= GL_TRIANGLES*/)
+    : mAllocator(allocator)
 {
-    assert((vertices.size() % AttribArrayPtr::Size()) == 0);
+    mMatrixTransform = mAllocator.AllocateAndInsert(transform);
+    mVertices = mAllocator.AllocateAndInsert(vertices);
+    mIndices = mAllocator.AllocateAndInsert(indices);
 
-    mVertexCount = vertices.size();
-    mIndexCount = indices.size();
-    mTransform = transform;
-
-    mVertices = mAllocator.Allocate<GLfloat>(mVertexCount);
-    mIndices = mAllocator.Allocate<GLuint>(mIndexCount);
-
-    memcpy(mVertices, vertices.begin(), vertices.size());
-    memcpy(mIndices, indices.begin(), indices.size());
+    mGraphicInfo = mAllocator.Allocate<GraphicInfo>(1);
+    GenerateGraphicInfo(vertices.size(), indices.size(), drawMode);    
 }
 
 //----------------------------------------------------------------
@@ -51,10 +37,20 @@ void GraphicData::SetBuffers(const GLuint vertexBuffer, const GLuint elementBuff
 {
     // feed Vertex Buffer
     glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
-    glBufferData(GL_ARRAY_BUFFER, mVertexCount * sFloatByteSize, mVertices, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, mGraphicInfo->vertexCount * Types::sVertexElementInBytes, mVertices, mGraphicInfo->drawMode);
     // feed Element Buffer
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementBuffer);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, mIndexCount * sUintByteSize, mIndices, GL_STATIC_DRAW);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, mGraphicInfo->indexCount * Types::sIndexElementBytes, mIndices, mGraphicInfo->drawMode);
+}
+
+//----------------------------------------------------------------
+void GraphicData::GenerateGraphicInfo(const size_t vertexCount, const size_t indexCount, const size_t drawMode)
+{
+    assert(mGraphicInfo != nullptr);
+
+    mGraphicInfo->vertexCount = vertexCount;
+    mGraphicInfo->indexCount = indexCount;
+    mGraphicInfo->drawMode = drawMode;
 }
 
 //********************************
@@ -63,7 +59,7 @@ void GraphicData::SetBuffers(const GLuint vertexBuffer, const GLuint elementBuff
 //----------------------------------------------------------------
 Program::Program(const char* vertexPath, const char* fragmentPath)
 {
-    FileString code(vertexPath);
+    Util::FileString code(vertexPath);
     GLuint vertexID = CompileShader(code.c_str(), GL_VERTEX_SHADER);
     code.ChangeFile(fragmentPath);
     GLuint fragmentID = CompileShader(code.c_str(), GL_FRAGMENT_SHADER);
@@ -82,7 +78,7 @@ const GLuint Program::CompileShader(const char* code, const GLuint type)
     GLuint id = glCreateShader(type);
     glShaderSource(id, 1, &code, NULL);
     glCompileShader(id);
-    CheckErrors(id, sVertex);
+    CheckErrors(id, true);
     return id;
 }
 
@@ -93,21 +89,21 @@ void Program::LinkProgram(const GLuint vertexID, const GLuint fragmentID)
     glAttachShader(ID, vertexID);
     glAttachShader(ID, fragmentID);
     glLinkProgram(ID);
-    CheckErrors(ID, sProgram);
+    CheckErrors(ID, false);
 }
 
 //----------------------------------------------------------------
-void Program::CheckErrors(GLuint shader, const char* type)
+void Program::CheckErrors(GLuint shader, const bool isShader)
 {
     GLint success;
     GLchar infoLog[1024];
-    if (type != sProgram)
+    if (isShader)
     {
         glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
         if (!success)
         {
             glGetShaderInfoLog(shader, 1024, NULL, infoLog);
-            LOG_STDERR(type << " Shader compilation error: " << infoLog);
+            LOG_STDERR(" Shader compilation error: " << infoLog);
         }
     }
     else
@@ -116,7 +112,7 @@ void Program::CheckErrors(GLuint shader, const char* type)
         if (!success)
         {
             glGetProgramInfoLog(shader, 1024, NULL, infoLog);
-            LOG_STDERR(type << "Linking error: " << infoLog);
+            LOG_STDERR("Linking error: " << infoLog);
         }
     }
 }
@@ -138,9 +134,9 @@ void Program::GenerateBuffers()
     glBindVertexArray(mVertexArrayObject);
     glBindBuffer(GL_ARRAY_BUFFER, mVertexBufferObject);
 
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sVertexStrideSize, sVertexPointPtr);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, AttribArrayPtr::sStrideSize, (void*)AttribArrayPtr::sPointPointer);
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sVertexStrideSize, sVertexColorPtr);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, AttribArrayPtr::sStrideSize, (void*)AttribArrayPtr::sColorPointer);
     glEnableVertexAttribArray(1);
 }
 
@@ -160,7 +156,7 @@ void Program::Draw(GraphicData& graphicData)
     Use();
 
     graphicData.SetBuffers(mVertexBufferObject, mElementArrayBuffer);
-    SetMatrix4f("model", graphicData.GetTransformPtr());
+    SetMatrix4f("model", graphicData.GetMatrixTransformVPtr());
 
     glBindVertexArray(mVertexArrayObject); 
     LOG_STDOUT(graphicData.GetIndexCount());
@@ -175,60 +171,5 @@ void Program::SetMatrix4f(const char* name, GLfloat* value_ptr)
     glUniformMatrix4fv(glGetUniformLocation(ID, name), 1, GL_FALSE, value_ptr);
 }
 
-//********************************
-//     Class Object
-//********************************
-//----------------------------------------------------------------
-Object::Object()
-    : mVertices()
-    , mIndices()
-    , mVerticesByteSize(0)
-    , mIndicesByteSize(0)
-    , mTransform(1.0f)
-{}
-
-//----------------------------------------------------------------
-Object::Object(const VertexVector vertices, const IndexVector indices)
-    : mVertices(vertices)
-    , mIndices(indices)
-    , mVerticesByteSize(vertices.size() * sizeof(GLfloat))
-    , mIndicesByteSize(indices.size() * sizeof(GLuint))
-    , mTransform(1.0f)
-{}
-
-//----------------------------------------------------------------
-Object::Object(const VertexAttribsVector vertices, const IndexVector indices)
-    : mVertices()
-    , mIndices(indices)
-    , mIndicesByteSize(indices.size() * sizeof(GLuint))
-    , mTransform(1.0f)
-{
-    mVertices.reserve(vertices.size() * eVertexAttribs::COUNT);
-
-    for (const VertexAttribs& vertex : vertices)
-    {
-        vertex.AppendToVertexVector(mVertices);
-    }
-    mVerticesByteSize = mVertices.size() * sizeof(GLfloat);
-}
-
-//----------------------------------------------------------------
-void Object::LoadObject(const VertexVector vertices, const IndexVector indices)
-{
-    mVertices         = vertices;
-    mVerticesByteSize = vertices.size() * sizeof(GLfloat);
-    mIndices          = indices;
-    mIndicesByteSize  = indices.size() * sizeof(GLuint);
-}
-
-//----------------------------------------------------------------
-void Object::AppendObject(const Object& other)
-{
-    mVertices.insert(mVertices.end(), other.mVertices.begin(), other.mVertices.end());
-    mIndices.insert(mIndices.end(), other.mIndices.begin(), other.mIndices.end());
-    mVerticesByteSize += other.mVerticesByteSize;
-    mIndicesByteSize += other.mIndicesByteSize;
-}
-
-} // namespace GL 
-} // namespace GameDisplay
+} // namespace System
+} // namespace Vision

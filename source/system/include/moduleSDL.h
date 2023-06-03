@@ -80,7 +80,6 @@ class EventManager
 
 	/**
 	 * @brief Private constructor of EventManager.
-	 *
 	 * Constructs the EventManager object. Private to enforce singleton pattern.
 	 */
 	EventManager();
@@ -88,7 +87,6 @@ class EventManager
 public:
 	/**
 	 * @brief Retrieves the current event by polling for events.
-	 *
 	 * @return Reference to the current event.
 	 */
 	static Event& PollEvent();
