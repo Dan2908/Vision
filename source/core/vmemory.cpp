@@ -12,6 +12,7 @@ Allocator::MemoryPool::MemoryPool(const std::size_t sizeInBytes)
     : mMemoryBegin(new Byte[sizeInBytes])
     , mCurrentPtr(0)
     , mAvailableSpace(sizeInBytes)
+    , mCapacity(sizeInBytes)
 {}
 //----------------------------------------------------------------
 Allocator::MemoryPool::~MemoryPool()

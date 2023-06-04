@@ -65,8 +65,7 @@ public:
     template<class T>
     T* Allocate(const size_t count)
     {
-        const std::size_t dataSize = count * sizeof(T);
-        auto target = mMemoryPools.lower_bound(dataSize);
+        auto target = mMemoryPools.lower_bound(count * sizeof(T));
 
         if (target == mMemoryPools.end())
         {
