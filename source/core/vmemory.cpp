@@ -33,7 +33,14 @@ Allocator::~Allocator()
 //----------------------------------------------------------------
 void Allocator::AddMemoryPool()
 {
-    mMemoryPools.push_back(std::make_unique<MemoryPool>(MemoryPool()));
+    MemoryPool* newPool = new MemoryPool();
+    mMemoryPools.insert(std::make_pair(newPool->GetAvailableSpace(), newPool));
+}
+
+void Allocator::UpdatePoolOrder(PoolMap::iterator& changedPool)
+{
+    mMemoryPools.insert(std::make_pair(changedPool->second->GetAvailableSpace(), changedPool->second));
+    mMemoryPools.erase(changedPool);
 }
 
 } // namespace Core

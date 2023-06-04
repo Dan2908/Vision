@@ -3,8 +3,7 @@
 #include <assert.h>
 #include <algorithm>
 #include <common/include/common.h>
-#include <memory>
-#include <vector>
+#include <map>
 
 namespace Vision
 {
@@ -35,16 +34,6 @@ class Allocator
         MemoryPool(const std::size_t sizeInBytes = DEFAULT_POOL_SIZE);
         ~MemoryPool();
 
-        friend inline const bool operator<(const MemoryPool a, const MemoryPool b)
-        {
-            return (a.mAvailableSpace < b.mAvailableSpace);
-        }
-        /* Function to sort pools by space (using pointer required for this container)*/
-        friend inline const bool LessComparer(const MemoryPool* a, const MemoryPool* b)
-        {
-            return ((*a) < (*b));
-        }
-
         template<class T>
         T* Allocate(const std::size_t count)
         {
@@ -63,9 +52,11 @@ class Allocator
         inline const size_t Capacity() { return mCapacity; }
     };
 
-    std::vector<std::unique_ptr<MemoryPool>> mMemoryPools;
-
+    using PoolMap = std::multimap<size_t, MemoryPool*>;
+    
+    PoolMap mMemoryPools;
     void AddMemoryPool();
+    void UpdatePoolOrder(PoolMap::iterator& changedPool);
 
 public:
     Allocator();
@@ -74,20 +65,18 @@ public:
     template<class T>
     T* Allocate(const size_t count)
     {
-        // Sorted vector, selecting the most space available
-        MemoryPool* target = mMemoryPools.back().get();
-
         const std::size_t dataSize = count * sizeof(T);
+        auto target = mMemoryPools.lower_bound(dataSize);
 
-        if (dataSize > target->GetAvailableSpace())
+        if (target == mMemoryPools.end())
         {
             AddMemoryPool();
             return Allocate<T>(count);//recurse
         }
 
-        T* output = target->Allocate<T>(count);
-        // Reorder vector based on available space
-        std::sort(mMemoryPools.begin(), mMemoryPools.end());
+        T* output = target->second->Allocate<T>(count);
+
+        UpdatePoolOrder(target);
 
         return output;
     }
