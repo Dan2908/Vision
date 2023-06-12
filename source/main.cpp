@@ -10,9 +10,9 @@ System::GraphicData Cube(
 {/*	   X      Y      Z     R     G     B   */
 
 	-0.5f,  0.5f,  0.5f, 0.8f, 1.0f, 0.6f, // front left  top
-	 0.5f,  0.5f,  0.5f, 0.8f, 1.0f, 0.6f, // front right top
-	-0.5f, -0.5f,  0.5f, 0.8f, 1.0f, 0.6f, // front left  bottom
-	 0.5f, -0.5f,  0.5f, 0.8f, 1.0f, 0.6f, // front right bottom
+	 0.5f,  0.5f,  0.5f, 0.8f, 0.8f, 0.6f, // front right top
+	-0.5f, -0.5f,  0.5f, 0.8f, 0.6f, 0.6f, // front left  bottom
+	 0.5f, -0.5f,  0.5f, 0.8f, 0.5f, 0.6f, // front right bottom
 	-0.5f,  0.5f, -0.5f, 0.8f, 1.0f, 0.6f, // back  left  top
 	 0.5f,  0.5f, -0.5f, 0.8f, 1.0f, 0.6f, // back  right top
 	-0.5f, -0.5f, -0.5f, 0.8f, 1.0f, 0.6f, // back  left  bottom
@@ -49,10 +49,6 @@ int main(int arc, char* argv[])
 	program.Use();
 
 	glm::mat4 model = glm::identity<glm::mat4>();
-
-	glm::mat4 view = glm::identity<glm::mat4>();
-	view = glm::translate(view, glm::vec3(0.0f, -0.5f, -4.0f));
-
 	glm::mat4 projection = glm::perspective(glm::radians(45.0f), 800.0f / 600.0f, 0.1f, 700.0f);
 
 	System::Camera camera;
