@@ -13,44 +13,21 @@ namespace System
 //     Class GraphicData
 //********************************
 //----------------------------------------------------------------
-GraphicData::GraphicData(Core::Allocator& allocator)
-        : mAllocator(allocator)
-        , mVertices(nullptr)
-        , mIndices(nullptr)
-        , mMatrixTransform(nullptr)
+GraphicData::GraphicData(std::initializer_list<GLfloat> vertices, std::initializer_list<GLuint> indices)
+    : mVertices(vertices)
+    , mIndices(indices)
+    , mMatrixTransform(1.0f)
 {}
 
 //----------------------------------------------------------------
-GraphicData::GraphicData(Core::Allocator& allocator, std::initializer_list<GLfloat> vertices, std::initializer_list<GLuint> indices, const Types::MatrixTransform transform /*= TransformMatrix(1.0f)*/, const size_t drawMode /*= GL_TRIANGLES*/)
-    : mAllocator(allocator)
-{
-    mMatrixTransform = mAllocator.AllocateAndInsert(transform);
-    mVertices = mAllocator.AllocateAndInsert(vertices);
-    mIndices = mAllocator.AllocateAndInsert(indices);
-
-    mGraphicInfo = mAllocator.Allocate<GraphicInfo>(1);
-    GenerateGraphicInfo(vertices.size(), indices.size(), drawMode);    
-}
-
-//----------------------------------------------------------------
-void GraphicData::SetBuffers(const GLuint vertexBuffer, const GLuint elementBuffer) const
+void GraphicData::SetBuffers(GLuint& vertexBuffer, GLuint& elementBuffer)
 {
     // feed Vertex Buffer
     glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
-    glBufferData(GL_ARRAY_BUFFER, mGraphicInfo->vertexCount * Types::sVertexElementInBytes, mVertices, mGraphicInfo->drawMode);
+    glBufferData(GL_ARRAY_BUFFER, mVertices.size() * Types::sVertexElementInBytes, mVertices.data(), GL_STATIC_DRAW);
     // feed Element Buffer
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementBuffer);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, mGraphicInfo->indexCount * Types::sIndexElementBytes, mIndices, mGraphicInfo->drawMode);
-}
-
-//----------------------------------------------------------------
-void GraphicData::GenerateGraphicInfo(const size_t vertexCount, const size_t indexCount, const size_t drawMode)
-{
-    assert(mGraphicInfo != nullptr);
-
-    mGraphicInfo->vertexCount = vertexCount;
-    mGraphicInfo->indexCount = indexCount;
-    mGraphicInfo->drawMode = drawMode;
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, mIndices.size() * Types::sIndexElementBytes, mIndices.data(), GL_STATIC_DRAW);
 }
 
 //********************************
@@ -128,15 +105,17 @@ void Program::CleanShaders(const GLuint vertexID, const GLuint fragmentID)
 void Program::GenerateBuffers()
 {
     glGenVertexArrays(1, &mVertexArrayObject);
-    glGenBuffers(1, &mVertexBufferObject);
-    glGenBuffers(1, &mElementArrayBuffer);
-
     glBindVertexArray(mVertexArrayObject);
-    glBindBuffer(GL_ARRAY_BUFFER, mVertexBufferObject);
 
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, AttribArrayPtr::sStrideSize, (void*)AttribArrayPtr::sPointPointer);
+    glGenBuffers(1, &mVertexArrayBuffer);
+    glBindBuffer(GL_ARRAY_BUFFER, mVertexArrayBuffer);
+
+    glGenBuffers(1, &mElementArrayBuffer);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mElementArrayBuffer);
+
+    glVertexAttribPointer(0, 3, GL_FLOAT, false, AttribArrayPtr::sStrideSize, (void*)0);
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, AttribArrayPtr::sStrideSize, (void*)AttribArrayPtr::sColorPointer);
+    glVertexAttribPointer(1, 3, GL_FLOAT, false, AttribArrayPtr::sStrideSize, (void*)(3*sizeof(GLfloat)));
     glEnableVertexAttribArray(1);
 }
 
@@ -149,26 +128,46 @@ void Program::Use() const
 //----------------------------------------------------------------
 void Program::Draw(GraphicData& graphicData)
 {
-    glViewport(0, -100, 800, 800);
-    glClearColor(0.3f, 0.0f, 0.3f, 1.0f);
+    glViewport(0, 0, 800, 600);
+    glClearColor(0.5f, 0.5f, 0.5f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    
-    Use();
 
-    graphicData.SetBuffers(mVertexBufferObject, mElementArrayBuffer);
-    SetMatrix4f("model", graphicData.GetMatrixTransformVPtr());
+    graphicData.SetBuffers(mVertexArrayBuffer, mElementArrayBuffer);
 
-    glBindVertexArray(mVertexArrayObject); 
-    LOG_STDOUT(graphicData.GetIndexCount());
+    glBindVertexArray(mVertexArrayObject);
     glDrawElements(GL_TRIANGLES, graphicData.GetIndexCount(), GL_UNSIGNED_INT, 0);
 }
 
-void Program::SetMatrix4f(const char* name, GLfloat* value_ptr)
+void Program::SetMatrix4f(const char* name, const Types::MatrixTransform& matrix)
 {
     const GLuint location = glGetUniformLocation(ID, name);
     assert(location != -1);
 
-    glUniformMatrix4fv(glGetUniformLocation(ID, name), 1, GL_FALSE, value_ptr);
+    glUniformMatrix4fv(glGetUniformLocation(ID, name), 1, GL_FALSE, glm::value_ptr(matrix));
+}
+
+//********************************
+//     Class Camera
+//********************************
+//----------------------------------------------------------------
+Camera::Camera()
+    : mPosition(0.0f, 0.0f, 3.0f)
+    , mView()
+{
+    mView = glm::lookAt(mPosition, Types::Vector(0.0f), Types::VECTOR_UP);
+}
+
+//----------------------------------------------------------------
+void Camera::Move(const Types::Vector& direction)
+{
+    mPosition += direction;
+    mView = glm::lookAt(mPosition, Types::Vector(0.0f), Types::VECTOR_UP);
+}
+
+//----------------------------------------------------------------
+const Types::MatrixTransform& Camera::GetView() const
+{
+    return mView;
 }
 
 } // namespace System

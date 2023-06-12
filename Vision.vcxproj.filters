@@ -51,4 +51,12 @@
       <Filter>Archivos de origen</Filter>
     </ClCompile>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="shaders\default_fs.glsl">
+      <Filter>Archivos de recursos</Filter>
+    </None>
+    <None Include="shaders\default_vs.glsl">
+      <Filter>Archivos de recursos</Filter>
+    </None>
+  </ItemGroup>
 </Project>

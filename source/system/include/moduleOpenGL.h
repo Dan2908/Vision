@@ -19,6 +19,8 @@ namespace Types
     static const size_t sMatrixTransformInBytes = sizeof(MatrixTransform);
     static const size_t sVertexElementInBytes = sizeof(VertexElement);
     static const size_t sIndexElementBytes = sizeof(IndexElement);
+
+    static const Vector VECTOR_UP = Vector(0.0f, 1.0f, 0.0f);
 }
 
 class AttribArrayPtr
@@ -60,62 +62,23 @@ public:
 
 class GraphicData
 {
-    struct GraphicInfo
-    {
-        size_t vertexCount;
-        size_t indexCount;
-        size_t drawMode;
-    };
-
-    Core::Allocator& mAllocator;
-
-    Types::VertexElement* mVertices;
-    Types::IndexElement* mIndices;
-    Types::MatrixTransform* mMatrixTransform;
-    GraphicInfo* mGraphicInfo;
-
-    void GenerateGraphicInfo(const size_t vertexCount, const size_t indexCount, const size_t drawMode);
+    std::vector<Types::VertexElement> mVertices;
+    std::vector<Types::IndexElement> mIndices;
+    Types::MatrixTransform mMatrixTransform;
+    GLenum mDrawMode = GL_TRIANGLES;
 
 public:
-    /* Constructor (empty): requires an allocator, maybe from the scene. */
-    GraphicData(Core::Allocator& allocator);
+    GraphicData(std::initializer_list<GLfloat> vertices, std::initializer_list<GLuint> indices);
 
-    /* Constructor: takes an allocator and a list of vertices and indices, optionally give a Transform matrix and a draw mode (default GL_TRIANGLES) */
-    GraphicData(Core::Allocator& allocator,
-        std::initializer_list<GLfloat> vertices,
-        std::initializer_list<GLuint> indices,
-        const Types::MatrixTransform transform = Types::MatrixTransform(1.0f),
-        const size_t drawMode = GL_TRIANGLES);
+    void SetBuffers(GLuint& vertexBuffer, GLuint& elementBuffer);
 
-    /* Sets GL buffers with the corresponding vertex and index data. */
-    void SetBuffers(const GLuint vertexBuffer, const GLuint elementBuffer) const;
-
-    inline Types::MatrixTransform& GetMatrixTransform() { return *mMatrixTransform; }
-    inline size_t& GetVertexCount() { return mGraphicInfo->vertexCount; }
-    inline size_t& GetIndexCount() { return mGraphicInfo->indexCount; }
-    inline size_t& GetDrawMode() { return mGraphicInfo->drawMode; }
-
-    inline Types::VertexElement*   GetMatrixTransformVPtr() { return glm::value_ptr(*mMatrixTransform); }
-  /*
-    // Return the number of indexes 
-    inline const size_t GetIndexCount() { return mIndexCount; }
-
-    inline GLfloat* GetTransformPtr() { return glm::value_ptr(mTransform); }
-    inline void Rotate(const GLfloat angle, const Vector3 axis)
-    {
-        mTransform = glm::rotate(mTransform, angle, axis);
-    }
-    inline void SetRotation(const GLfloat angle, const Vector3 axis)
-    {
-        mTransform = glm::rotate(glm::mat4(1.0f), angle, axis);
-    }
-  */  
+    inline const size_t GetIndexCount() { return mIndices.size(); }
 };
 
 class Program
 {
     GLuint mVertexArrayObject;
-    GLuint mVertexBufferObject;
+    GLuint mVertexArrayBuffer;
     GLuint mElementArrayBuffer;
      
     const GLuint CompileShader(const char* code, const GLuint type);
@@ -129,14 +92,22 @@ public:
 
     Program(const char* vertexPath, const char* fragmentPath);
     void Use() const;
+    void SetMatrix4f(const char* name, const Types::MatrixTransform& matrix);
+
     void Draw(GraphicData& graphicData);
-    void SetMatrix4f(const char* name, GLfloat* value_ptr);
 };
 
 class Camera
 {
+    Types::Vector mPosition;
+    Types::MatrixTransform mView;
+
 public:
     Camera();
+
+    void Move(const Types::Vector& direction);
+
+    const Types::MatrixTransform& GetView() const;
 };
 
 } // namespace System 

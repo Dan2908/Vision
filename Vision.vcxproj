@@ -151,6 +151,10 @@
     <ClCompile Include="source\system\moduleSDL.cpp" />
     <ClCompile Include="source\thirdparty\glad.c" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="shaders\default_fs.glsl" />
+    <None Include="shaders\default_vs.glsl" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

@@ -87,6 +87,8 @@ Window::Window(const int width, const int height, const char* title /* = "New wi
             LOG_STDOUT("Renderer:" << glGetString(GL_RENDERER));
             LOG_STDOUT("Version:" << glGetString(GL_VERSION));
             LOG_STDOUT("Shading Language:" << glGetString(GL_SHADING_LANGUAGE_VERSION));
+
+            SDL_GL_MakeCurrent(mWindow, glContext);
         }
         else
         {
