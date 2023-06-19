@@ -1,3 +1,6 @@
+
+#define STB_IMAGE_IMPLEMENTATION
+
 #include <thirdparty.h>
 #include <system/include/moduleSDL.h>
 #include <system/include/moduleOpenGL.h>
@@ -9,10 +12,10 @@ using namespace Vision;
 System::GraphicData Cube(
 {/*	   X      Y      Z     R     G     B   */
 
-	-0.5f,  0.5f,  0.5f, 0.8f, 1.0f, 0.6f, // front left  top
-	 0.5f,  0.5f,  0.5f, 0.8f, 0.8f, 0.6f, // front right top
-	-0.5f, -0.5f,  0.5f, 0.8f, 0.6f, 0.6f, // front left  bottom
-	 0.5f, -0.5f,  0.5f, 0.8f, 0.5f, 0.6f, // front right bottom
+	-0.5f,  0.5f,  0.5f, 0.5f, 0.7f, 0.3f, // front left  top
+	 0.5f,  0.5f,  0.5f, 0.8f, 1.0f, 0.6f, // front right top
+	-0.5f, -0.5f,  0.5f, 0.5f, 0.7f, 0.3f, // front left  bottom
+	 0.5f, -0.5f,  0.5f, 0.8f, 1.0f, 0.6f, // front right bottom
 	-0.5f,  0.5f, -0.5f, 0.8f, 1.0f, 0.6f, // back  left  top
 	 0.5f,  0.5f, -0.5f, 0.8f, 1.0f, 0.6f, // back  right top
 	-0.5f, -0.5f, -0.5f, 0.8f, 1.0f, 0.6f, // back  left  bottom

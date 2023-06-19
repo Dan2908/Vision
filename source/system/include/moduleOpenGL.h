@@ -1,6 +1,7 @@
 #pragma once
 #include <core/include/vmemory.h>
 #include <thirdparty.h>
+#include <map>
 #include <vector>
 
 namespace Vision
@@ -14,6 +15,8 @@ namespace Types
     using MatrixTransform = glm::mat4;
     using VertexElement = GLfloat;
     using IndexElement = GLuint;
+    using TextureDataPtr = unsigned char*;
+    using TextureInt = int32_t;
     
     static const size_t sVectorInBytes = sizeof(Vector);
     static const size_t sMatrixTransformInBytes = sizeof(MatrixTransform);
@@ -35,11 +38,19 @@ public:
         COLOR_R,
         COLOR_G,
         COLOR_B,
+        TEX_X,
+        TEX_Y,
         SIZE,
 
         POINT_FIRST = POINT_X,
-        COLOR_FIRST = COLOR_R
+        COLOR_FIRST = COLOR_R,
+        TEX_FIRST = TEX_X
     };
+
+    static const size_t sStrideSize = SIZE * Types::sVertexElementInBytes;
+    static const size_t sPointPointer = POINT_FIRST * Types::sVertexElementInBytes;
+    static const size_t sColorPointer = COLOR_FIRST * Types::sVertexElementInBytes;
+    static const size_t sTexturePointer = TEX_FIRST * Types::sVertexElementInBytes;
 
     AttribArrayPtr(GLfloat* data)
         : mPointer(data)
@@ -53,24 +64,26 @@ public:
     inline Types::VertexElement& Green() { return mPointer[COLOR_G]; }
     inline Types::VertexElement& Blue()  { return mPointer[COLOR_B]; }
 
+    inline Types::VertexElement& TextureX() { return mPointer[TEX_X]; }
+    inline Types::VertexElement& TextureY() { return mPointer[TEX_Y]; }
+
     static const size_t ElementCount() { return eAttrib::SIZE; }
 
-    static const size_t sStrideSize = SIZE * Types::sVertexElementInBytes;
-    static const size_t sPointPointer = POINT_FIRST * Types::sVertexElementInBytes;
-    static const size_t sColorPointer = COLOR_FIRST * Types::sIndexElementBytes;
 };
 
 class GraphicData
 {
+    GLenum mDrawMode = GL_TRIANGLES;
+
     std::vector<Types::VertexElement> mVertices;
     std::vector<Types::IndexElement> mIndices;
     Types::MatrixTransform mMatrixTransform;
-    GLenum mDrawMode = GL_TRIANGLES;
 
 public:
     GraphicData(std::initializer_list<GLfloat> vertices, std::initializer_list<GLuint> indices);
 
     void SetBuffers(GLuint& vertexBuffer, GLuint& elementBuffer);
+    //void SetTextures()
 
     inline const size_t GetIndexCount() { return mIndices.size(); }
 };
@@ -96,6 +109,48 @@ public:
 
     void Draw(GraphicData& graphicData);
 };
+
+struct TextureInfo
+{
+    GLuint id;
+    Types::TextureInt width;
+    Types::TextureInt height;
+    Types::TextureInt nrChannels;
+    Types::TextureDataPtr data;
+
+    TextureInfo(const char* path)
+        : data(NULL)
+        , id(0)
+    {
+        data = stbi_load(path, &width, &height, &nrChannels, 0);
+        if (data == NULL)
+        {
+            LOG_STDERR("Failed to load texture '" << path << "'.");
+            id = -1;
+        }
+    }
+
+    ~TextureInfo() { stbi_image_free(data); }
+
+    const bool CheckInfo() const { return data != NULL; }
+};
+
+class TextureLoader
+{
+private:
+    typedef std::map<std::string, TextureInfo> TextureMap;    // Ordered set of 
+    
+    TextureMap mTextureList;
+
+    static TextureLoader mInstance;
+    TextureLoader();
+public:
+    const TextureInfo& AddTexture(const char* path, const char* name = "unnamed");
+    const bool LoadTextureToGL(TextureInfo& texture);
+    const bool RemoveTexture(const char* name);
+    const GLuint GetTexture(const char* name);
+};
+
 
 class Camera
 {
