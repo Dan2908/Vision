@@ -8,43 +8,46 @@
 
 using namespace Vision;
 
-
-System::GraphicData Cube(
-{/*	   X      Y      Z     R     G     B   */
-
-	-0.5f,  0.5f,  0.5f, 0.5f, 0.7f, 0.3f, // front left  top
-	 0.5f,  0.5f,  0.5f, 0.8f, 1.0f, 0.6f, // front right top
-	-0.5f, -0.5f,  0.5f, 0.5f, 0.7f, 0.3f, // front left  bottom
-	 0.5f, -0.5f,  0.5f, 0.8f, 1.0f, 0.6f, // front right bottom
-	-0.5f,  0.5f, -0.5f, 0.8f, 1.0f, 0.6f, // back  left  top
-	 0.5f,  0.5f, -0.5f, 0.8f, 1.0f, 0.6f, // back  right top
-	-0.5f, -0.5f, -0.5f, 0.8f, 1.0f, 0.6f, // back  left  bottom
-	 0.5f, -0.5f, -0.5f, 0.8f, 1.0f, 0.6f, // back  right bottom
-},
-{
-	//Front
-	0, 1, 2,
-	1, 2, 3,
-	//Back
-	4, 5, 6,
-	5, 6, 7,
-	//Top
-	4, 5, 0,
-	5, 0, 1,
-	//Bottom
-	2, 3, 6,
-	3, 6, 7,
-	//Left
-	4, 0, 6,
-	0, 6, 2,
-	//Right
-	1, 5, 3,
-	5, 3, 7
-
-});
+static const char* grassPath = "texture\\grassPattern.jpg";
 
 int main(int arc, char* argv[]) 
 {
+	System::GraphicData Cube(
+	{/*	   X      Y      Z     R     G     B   TxX	 TxY    */
+
+		-0.5f,  0.5f,  0.5f, 0.5f, 0.7f, 0.3f, 0.0f, 1.0f,  // front left  top
+		 0.5f,  0.5f,  0.5f, 0.8f, 1.0f, 0.6f, 1.0f, 1.0f,  // front right top
+		-0.5f, -0.5f,  0.5f, 0.5f, 0.7f, 0.3f, 0.0f, 0.0f,	// front left  bottom
+		 0.5f, -0.5f,  0.5f, 0.8f, 1.0f, 0.6f, 1.0f, 0.0f,  // front right bottom
+		-0.5f,  0.5f, -0.5f, 0.8f, 1.0f, 0.6f, 1.0f, 0.0f,// back  left  top
+		 0.5f,  0.5f, -0.5f, 0.8f, 1.0f, 0.6f, 0.0f, 0.0f,// back  right top
+		-0.5f, -0.5f, -0.5f, 0.8f, 1.0f, 0.6f, 1.0f, 1.0f,// back  left  bottom
+		 0.5f, -0.5f, -0.5f, 0.8f, 1.0f, 0.6f, 0.0f, 1.0f,// back  right bottom
+	},
+	{
+		//Front
+		0, 1, 2,
+		1, 2, 3,
+		//Back
+		4, 5, 6,
+		5, 6, 7,
+		//Top
+		4, 5, 0,
+		5, 0, 1,
+		//Bottom
+		2, 3, 6,
+		3, 6, 7,
+		//Left
+		4, 0, 6,
+		0, 6, 2,
+		//Right
+		1, 5, 3,
+		5, 3, 7
+
+	},
+	{
+	"texture\\grassPattern.jpg"});
+
 	System::System::Start();
 	System::Window window(800, 600);
 
@@ -57,6 +60,8 @@ int main(int arc, char* argv[])
 	System::Camera camera;
 
 	System::Event& event = System::EventManager::PollEvent();
+
+	program.LoadAllTexturesToGL();
 
 	bool quit = false;
 	bool refresh = true;

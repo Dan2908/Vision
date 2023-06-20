@@ -9,15 +9,25 @@ namespace Vision
 { 
 namespace System
 {
+
 //********************************
 //     Class GraphicData
 //********************************
 //----------------------------------------------------------------
-GraphicData::GraphicData(std::initializer_list<GLfloat> vertices, std::initializer_list<GLuint> indices)
+GraphicData::GraphicData(std::initializer_list<GLfloat> vertices, std::initializer_list<GLuint> indices, std::initializer_list<const char*> texturePaths)
     : mVertices(vertices)
     , mIndices(indices)
+    , mTextures()
     , mMatrixTransform(1.0f)
-{}
+{
+    if (texturePaths.size() > 0)
+    {
+        for (const char* path : texturePaths)
+        {
+            mTextures.push_back(&TextureLoader::AddTexture(path));
+        }
+    }
+}
 
 //----------------------------------------------------------------
 void GraphicData::SetBuffers(GLuint& vertexBuffer, GLuint& elementBuffer)
@@ -28,6 +38,16 @@ void GraphicData::SetBuffers(GLuint& vertexBuffer, GLuint& elementBuffer)
     // feed Element Buffer
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementBuffer);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, mIndices.size() * Types::sIndexElementBytes, mIndices.data(), GL_STATIC_DRAW);
+
+    const size_t nTextures = mTextures.size();
+
+    assert(nTextures < 32);
+
+    for (int i = 0; i < nTextures; ++i)
+    {
+        glActiveTexture(GL_TEXTURE0 + i);
+        glBindTexture(GL_TEXTURE_2D, mTextures.at(i)->id);
+    }
 }
 
 //********************************
@@ -140,6 +160,7 @@ void Program::Draw(GraphicData& graphicData)
     glDrawElements(GL_TRIANGLES, graphicData.GetIndexCount(), GL_UNSIGNED_INT, 0);
 }
 
+//----------------------------------------------------------------
 void Program::SetMatrix4f(const char* name, const Types::MatrixTransform& matrix)
 {
     const GLuint location = glGetUniformLocation(ID, name);
@@ -148,34 +169,8 @@ void Program::SetMatrix4f(const char* name, const Types::MatrixTransform& matrix
     glUniformMatrix4fv(glGetUniformLocation(ID, name), 1, GL_FALSE, glm::value_ptr(matrix));
 }
 
-//********************************
-//     Class TextureLoader
-//********************************
 //----------------------------------------------------------------
-TextureLoader::TextureLoader()
-    : mTextureList()
-{}
-
-//----------------------------------------------------------------
-const TextureInfo& TextureLoader::AddTexture(const char* path, const char* name /*= "unnamed"*/)
-{
-    // No repeated names allowed, automatically renamed at this point.
-    std::string rename(name);
-    int renameIndex = 1;
-
-    while (mTextureList.find(rename) != mTextureList.end())
-    {
-        rename.assign(name);
-        rename.append(std::to_string(renameIndex++));
-    }
-    // emplace
-    auto result = mTextureList.emplace(std::make_pair(rename, TextureInfo(path)));
-
-    return result.first->second;
-}
-
-//----------------------------------------------------------------
-const bool TextureLoader::LoadTextureToGL(TextureInfo& texture)
+const bool Program::LoadTextureToGL(TextureInfo& texture)
 {
     if (texture.CheckInfo())
     {
@@ -198,26 +193,75 @@ const bool TextureLoader::LoadTextureToGL(TextureInfo& texture)
 }
 
 //----------------------------------------------------------------
-const bool TextureLoader::RemoveTexture(const char* name)
+void Program::LoadAllTexturesToGL()
 {
-    if (mTextureList.find(name) != mTextureList.end())
+    Types::TextureMap& texList = TextureLoader::GetTextureList();
+    for (auto& tex : texList)
     {
-        mTextureList.erase(name);
+        LoadTextureToGL(tex.second);
+    }
+}
+
+//********************************
+//     Class TextureLoader
+//********************************
+
+TextureLoader* TextureLoader::mInstance = new TextureLoader();
+//----------------------------------------------------------------
+TextureLoader::TextureLoader()
+    : mTextureList()
+{
+}
+
+//----------------------------------------------------------------
+TextureInfo& TextureLoader::iAddTexture(const char* path, const char* name /*= "unnamed"*/)
+{
+    // No repeated names allowed, automatically renamed at this point.
+    std::string rename(name);
+    int renameIndex = 1;
+    Types::TextureMap& texList = mInstance->mTextureList;
+
+    while (texList.find(rename) != texList.end())
+    {
+        rename.assign(name);
+        rename.append(std::to_string(renameIndex++));
+    }
+    // emplace
+    texList[rename] = *new TextureInfo(path);
+
+    return texList[rename];
+}
+
+
+//----------------------------------------------------------------
+const bool TextureLoader::iRemoveTexture(const char* name)
+{
+    Types::TextureMap& texList = mInstance->mTextureList;
+
+    if (texList.find(name) != texList.end())
+    {
+        texList.erase(name);
         return true;
     }
     return false;
 }
 
 //----------------------------------------------------------------
-const GLuint TextureLoader::GetTexture(const char* name)
+const GLuint TextureLoader::iGetTexture(const char* name)
 {
-    auto tex = mTextureList.find(name);
-    if (tex != mTextureList.end())
+    auto tex = mInstance->mTextureList.find(name);
+    if (tex != mInstance->mTextureList.end())
     {
         return tex->second.id;
     }
 
     return -1;
+}
+
+//----------------------------------------------------------------
+Types::TextureMap& TextureLoader::iGetTextureList()
+{
+    return mInstance->mTextureList;
 }
 
 //********************************

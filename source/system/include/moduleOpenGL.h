@@ -26,6 +26,40 @@ namespace Types
     static const Vector VECTOR_UP = Vector(0.0f, 1.0f, 0.0f);
 }
 
+struct TextureInfo
+{
+    GLuint id;
+    Types::TextureInt width;
+    Types::TextureInt height;
+    Types::TextureInt nrChannels;
+    Types::TextureDataPtr data;
+
+    TextureInfo()
+        : data(NULL)
+        , nrChannels(0)
+        , height(0)
+        , width(0)
+        , id(0)
+    {}
+
+    TextureInfo(const char* path)
+        : TextureInfo()
+    {
+        
+        data = stbi_load(path, &width, &height, &nrChannels, 0);
+        LOG_STDOUT(sizeof(data));
+        if (data == NULL)
+        {
+            LOG_STDERR("Failed to load texture '" << path << "'.");
+            id = -1;
+        }
+    }
+
+    ~TextureInfo() { stbi_image_free(data); }
+
+    const bool CheckInfo() const { return data != NULL; }
+};
+
 class AttribArrayPtr
 {
     Types::VertexElement* mPointer;
@@ -71,16 +105,53 @@ public:
 
 };
 
+namespace Types { using TextureMap = std::map<std::string, TextureInfo>; }    // Ordered set of texture names/info
+
+class TextureLoader
+{
+private:
+    
+    TextureLoader();
+
+    Types::TextureMap mTextureList;
+
+    static TextureLoader* mInstance;
+
+    static TextureInfo& iAddTexture(const char* path, const char* name = "unnamed");
+    static const bool iRemoveTexture(const char* name);
+    static const GLuint iGetTexture(const char* name);
+    static Types::TextureMap& iGetTextureList();
+
+public:
+    static inline TextureInfo& AddTexture(const char* path, const char* name = "unnamed") 
+    {
+        return iAddTexture(path, name);
+    }
+    static inline const bool RemoveTexture(const char* name)
+    {
+        return iRemoveTexture(name);
+    }
+    static inline const GLuint GetTexture(const char* name)
+    {
+        return iGetTexture(name);
+    }
+    static inline Types::TextureMap& GetTextureList()
+    {
+        return iGetTextureList();
+    }
+};
+
 class GraphicData
 {
     GLenum mDrawMode = GL_TRIANGLES;
 
     std::vector<Types::VertexElement> mVertices;
     std::vector<Types::IndexElement> mIndices;
+    std::vector<TextureInfo*> mTextures;
     Types::MatrixTransform mMatrixTransform;
 
 public:
-    GraphicData(std::initializer_list<GLfloat> vertices, std::initializer_list<GLuint> indices);
+    GraphicData(std::initializer_list<GLfloat> vertices, std::initializer_list<GLuint> indices, std::initializer_list<const char*> texturePaths = {});
 
     void SetBuffers(GLuint& vertexBuffer, GLuint& elementBuffer);
     //void SetTextures()
@@ -106,50 +177,11 @@ public:
     Program(const char* vertexPath, const char* fragmentPath);
     void Use() const;
     void SetMatrix4f(const char* name, const Types::MatrixTransform& matrix);
-
+    const bool LoadTextureToGL(TextureInfo& texture);
+    void LoadAllTexturesToGL();
     void Draw(GraphicData& graphicData);
 };
 
-struct TextureInfo
-{
-    GLuint id;
-    Types::TextureInt width;
-    Types::TextureInt height;
-    Types::TextureInt nrChannels;
-    Types::TextureDataPtr data;
-
-    TextureInfo(const char* path)
-        : data(NULL)
-        , id(0)
-    {
-        data = stbi_load(path, &width, &height, &nrChannels, 0);
-        if (data == NULL)
-        {
-            LOG_STDERR("Failed to load texture '" << path << "'.");
-            id = -1;
-        }
-    }
-
-    ~TextureInfo() { stbi_image_free(data); }
-
-    const bool CheckInfo() const { return data != NULL; }
-};
-
-class TextureLoader
-{
-private:
-    typedef std::map<std::string, TextureInfo> TextureMap;    // Ordered set of 
-    
-    TextureMap mTextureList;
-
-    static TextureLoader mInstance;
-    TextureLoader();
-public:
-    const TextureInfo& AddTexture(const char* path, const char* name = "unnamed");
-    const bool LoadTextureToGL(TextureInfo& texture);
-    const bool RemoveTexture(const char* name);
-    const GLuint GetTexture(const char* name);
-};
 
 
 class Camera
