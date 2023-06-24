@@ -34,10 +34,10 @@ void GraphicData::SetBuffers(GLuint& vertexBuffer, GLuint& elementBuffer)
 {
     // feed Vertex Buffer
     glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
-    glBufferData(GL_ARRAY_BUFFER, mVertices.size() * Types::sVertexElementInBytes, mVertices.data(), GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, mVertices.size() * Types::VertexConst::sVertexElementInBytes, mVertices.data(), GL_DYNAMIC_DRAW);
     // feed Element Buffer
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementBuffer);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, mIndices.size() * Types::sIndexElementBytes, mIndices.data(), GL_STATIC_DRAW);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, mIndices.size() * Types::VertexConst::sIndexElementBytes, mIndices.data(), GL_STATIC_DRAW);
 
     const size_t nTextures = mTextures.size();
 
@@ -133,11 +133,11 @@ void Program::GenerateBuffers()
     glGenBuffers(1, &mElementArrayBuffer);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mElementArrayBuffer);
 
-    glVertexAttribPointer(0, 3, GL_FLOAT, false, AttribArrayPtr::sStrideSize, (void*)AttribArrayPtr::sPointPointer);
+    glVertexAttribPointer(0, 3, GL_FLOAT, false, Types::VertexConst::sStrideSize, (void*)Types::VertexConst::sPointPointer);
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(1, 3, GL_FLOAT, false, AttribArrayPtr::sStrideSize, (void*)AttribArrayPtr::sColorPointer);
+    glVertexAttribPointer(1, 3, GL_FLOAT, false, Types::VertexConst::sStrideSize, (void*)Types::VertexConst::sColorPointer);
     glEnableVertexAttribArray(1);
-    glVertexAttribPointer(2, 2, GL_FLOAT, false, AttribArrayPtr::sStrideSize, (void*)AttribArrayPtr::sTexturePointer);
+    glVertexAttribPointer(2, 2, GL_FLOAT, false, Types::VertexConst::sStrideSize, (void*)Types::VertexConst::sTexturePointer);
     glEnableVertexAttribArray(2);
 }
 
@@ -161,7 +161,7 @@ void Program::Draw(GraphicData& graphicData)
 }
 
 //----------------------------------------------------------------
-void Program::SetMatrix4f(const char* name, const Types::MatrixTransform& matrix)
+void Program::SetMatrix4f(const char* name, const Types::Matrix44& matrix)
 {
     const GLuint location = glGetUniformLocation(ID, name);
     assert(location != -1);
@@ -170,7 +170,7 @@ void Program::SetMatrix4f(const char* name, const Types::MatrixTransform& matrix
 }
 
 //----------------------------------------------------------------
-const bool Program::LoadTextureToGL(TextureInfo& texture)
+const bool Program::LoadTextureToGL(Types::TextureInfo& texture)
 {
     if (texture.CheckInfo())
     {
@@ -195,7 +195,7 @@ const bool Program::LoadTextureToGL(TextureInfo& texture)
 //----------------------------------------------------------------
 void Program::LoadAllTexturesToGL()
 {
-    Types::TextureMap& texList = TextureLoader::GetTextureList();
+    TextureMap& texList = TextureLoader::GetTextureList();
     for (auto& tex : texList)
     {
         LoadTextureToGL(tex.second);
@@ -214,12 +214,12 @@ TextureLoader::TextureLoader()
 }
 
 //----------------------------------------------------------------
-TextureInfo& TextureLoader::iAddTexture(const char* path, const char* name /*= "unnamed"*/)
+Types::TextureInfo& TextureLoader::iAddTexture(const char* path, const char* name /*= "unnamed"*/)
 {
     // No repeated names allowed, automatically renamed at this point.
     std::string rename(name);
     int renameIndex = 1;
-    Types::TextureMap& texList = mInstance->mTextureList;
+    TextureMap& texList = mInstance->mTextureList;
 
     while (texList.find(rename) != texList.end())
     {
@@ -227,7 +227,7 @@ TextureInfo& TextureLoader::iAddTexture(const char* path, const char* name /*= "
         rename.append(std::to_string(renameIndex++));
     }
     // emplace
-    texList[rename] = *new TextureInfo(path);
+    texList[rename] = *new Types::TextureInfo(path);
 
     return texList[rename];
 }
@@ -236,7 +236,7 @@ TextureInfo& TextureLoader::iAddTexture(const char* path, const char* name /*= "
 //----------------------------------------------------------------
 const bool TextureLoader::iRemoveTexture(const char* name)
 {
-    Types::TextureMap& texList = mInstance->mTextureList;
+    TextureMap& texList = mInstance->mTextureList;
 
     if (texList.find(name) != texList.end())
     {
@@ -259,7 +259,7 @@ const GLuint TextureLoader::iGetTexture(const char* name)
 }
 
 //----------------------------------------------------------------
-Types::TextureMap& TextureLoader::iGetTextureList()
+TextureMap& TextureLoader::iGetTextureList()
 {
     return mInstance->mTextureList;
 }
@@ -269,21 +269,21 @@ Types::TextureMap& TextureLoader::iGetTextureList()
 //********************************
 //----------------------------------------------------------------
 Camera::Camera()
-    : mPosition(0.0f, 0.0f, 3.0f)
+    : mPosition(0.0f, 0.0f, 10.0f)
     , mView()
 {
-    mView = glm::lookAt(mPosition, Types::Vector(0.0f), Types::VECTOR_UP);
+    mView = glm::lookAt(mPosition, Types::Vector3(0.0f), Types::VECTOR_UP);
 }
 
 //----------------------------------------------------------------
-void Camera::Move(const Types::Vector& direction)
+void Camera::Move(const Types::Vector3& direction)
 {
     mPosition += direction;
-    mView = glm::lookAt(mPosition, Types::Vector(0.0f), Types::VECTOR_UP);
+    mView = glm::lookAt(mPosition, Types::Vector3(0.0f), Types::VECTOR_UP);
 }
 
 //----------------------------------------------------------------
-const Types::MatrixTransform& Camera::GetView() const
+const Types::Matrix44& Camera::GetView() const
 {
     return mView;
 }

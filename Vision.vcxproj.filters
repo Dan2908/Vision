@@ -30,6 +30,9 @@
     <ClInclude Include="source\core\include\vmemory.h">
       <Filter>Archivos de encabezado</Filter>
     </ClInclude>
+    <ClInclude Include="source\system\include\types.h">
+      <Filter>Archivos de encabezado</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\system\moduleSDL.cpp">

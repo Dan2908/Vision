@@ -141,6 +141,7 @@
     <ClInclude Include="source\core\include\vmemory.h" />
     <ClInclude Include="source\system\include\moduleOpenGL.h" />
     <ClInclude Include="source\system\include\moduleSDL.h" />
+    <ClInclude Include="source\system\include\types.h" />
     <ClInclude Include="source\thirdparty\include\thirdparty.h" />
   </ItemGroup>
   <ItemGroup>

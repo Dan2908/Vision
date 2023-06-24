@@ -14,6 +14,8 @@ enum class eActions
 	UP,
 	DOWN,
 	LEFT,
+	PLUS,
+	MINUS,
 	RIGHT
 };
 
@@ -45,6 +47,12 @@ class Event
 			case SDLK_RIGHT:
 			case SDLK_d:
 				return eActions::RIGHT;
+			case SDLK_MINUS:
+			case SDLK_KP_MINUS:
+				return eActions::MINUS;
+			case SDLK_PLUS:
+			case SDLK_KP_PLUS:
+				return eActions::PLUS;
 			default:
 				return eActions::INVALID;
 			}

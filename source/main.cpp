@@ -15,14 +15,14 @@ int main(int arc, char* argv[])
 	System::GraphicData Cube(
 	{/*	   X      Y      Z     R     G     B   TxX	 TxY    */
 
-		-0.5f,  0.5f,  0.5f, 0.5f, 0.7f, 0.3f, 0.0f, 1.0f,  // front left  top
-		 0.5f,  0.5f,  0.5f, 0.8f, 1.0f, 0.6f, 1.0f, 1.0f,  // front right top
-		-0.5f, -0.5f,  0.5f, 0.5f, 0.7f, 0.3f, 0.0f, 0.0f,	// front left  bottom
-		 0.5f, -0.5f,  0.5f, 0.8f, 1.0f, 0.6f, 1.0f, 0.0f,  // front right bottom
-		-0.5f,  0.5f, -0.5f, 0.8f, 1.0f, 0.6f, 1.0f, 0.0f,// back  left  top
-		 0.5f,  0.5f, -0.5f, 0.8f, 1.0f, 0.6f, 0.0f, 0.0f,// back  right top
-		-0.5f, -0.5f, -0.5f, 0.8f, 1.0f, 0.6f, 1.0f, 1.0f,// back  left  bottom
-		 0.5f, -0.5f, -0.5f, 0.8f, 1.0f, 0.6f, 0.0f, 1.0f,// back  right bottom
+		-0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f,  // front left  top
+		 0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f,  // front right top
+		-0.5f, -0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f,	// front left  bottom
+		 0.5f, -0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f,  // front right bottom
+		-0.5f,  0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f,// back  left  top
+		 0.5f,  0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f,// back  right top
+		-0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f,// back  left  bottom
+		 0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f,// back  right bottom
 	},
 	{
 		//Front
@@ -46,7 +46,8 @@ int main(int arc, char* argv[])
 
 	},
 	{
-	"texture\\grassPattern.jpg"});
+	"texture\\grassPattern.jpg"
+	});
 
 	System::System::Start();
 	System::Window window(800, 600);
@@ -65,6 +66,7 @@ int main(int arc, char* argv[])
 
 	bool quit = false;
 	bool refresh = true;
+
 	while (!quit)
 	{
 		if (refresh)
@@ -86,20 +88,29 @@ int main(int arc, char* argv[])
 			break;
 
 		case System::eActions::LEFT:
-			camera.Move(System::Types::Vector(0.1f, 0.0f, 0.0f));
+			camera.RotateAround(System::Types::Vector3(0.0f, 0.01f, 0.0f));
 			break;
 
 		case System::eActions::RIGHT:
-			camera.Move(System::Types::Vector(-0.1f, 0.0f, 0.0f));
+			camera.RotateAround(System::Types::Vector3(0.0f, -0.01f, 0.0f));
 			break;
 
 		case System::eActions::UP:
-			camera.Move(System::Types::Vector(0.0f, 0.1f, 0.0f));
+			camera.RotateAround(System::Types::Vector3(0.01f, 0.0f, 0.0f));
 			break;
 
 		case System::eActions::DOWN:
-			camera.Move(System::Types::Vector(0.0f, -0.1f, 0.0f));
+			camera.RotateAround(System::Types::Vector3(-0.01f, 0.0f, 0.0f));
 			break;
+
+		case System::eActions::PLUS:
+			camera.ZoomIn();
+			break;
+
+		case System::eActions::MINUS:
+			camera.ZoomOut();
+			break;
+
 		default:
 			refresh = false;
 		}

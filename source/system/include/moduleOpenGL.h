@@ -3,109 +3,14 @@
 #include <thirdparty.h>
 #include <map>
 #include <vector>
+#include <system/include/types.h>
 
 namespace Vision
 {
 namespace System
 {
 
-namespace Types
-{
-    using Vector = glm::fvec3;
-    using MatrixTransform = glm::mat4;
-    using VertexElement = GLfloat;
-    using IndexElement = GLuint;
-    using TextureDataPtr = unsigned char*;
-    using TextureInt = int32_t;
-    
-    static const size_t sVectorInBytes = sizeof(Vector);
-    static const size_t sMatrixTransformInBytes = sizeof(MatrixTransform);
-    static const size_t sVertexElementInBytes = sizeof(VertexElement);
-    static const size_t sIndexElementBytes = sizeof(IndexElement);
-
-    static const Vector VECTOR_UP = Vector(0.0f, 1.0f, 0.0f);
-}
-
-struct TextureInfo
-{
-    GLuint id;
-    Types::TextureInt width;
-    Types::TextureInt height;
-    Types::TextureInt nrChannels;
-    Types::TextureDataPtr data;
-
-    TextureInfo()
-        : data(NULL)
-        , nrChannels(0)
-        , height(0)
-        , width(0)
-        , id(0)
-    {}
-
-    TextureInfo(const char* path)
-        : TextureInfo()
-    {
-        
-        data = stbi_load(path, &width, &height, &nrChannels, 0);
-        LOG_STDOUT(sizeof(data));
-        if (data == NULL)
-        {
-            LOG_STDERR("Failed to load texture '" << path << "'.");
-            id = -1;
-        }
-    }
-
-    ~TextureInfo() { stbi_image_free(data); }
-
-    const bool CheckInfo() const { return data != NULL; }
-};
-
-class AttribArrayPtr
-{
-    Types::VertexElement* mPointer;
-public:
-    enum eAttrib
-    {
-        POINT_X,
-        POINT_Y,
-        POINT_Z,
-        COLOR_R,
-        COLOR_G,
-        COLOR_B,
-        TEX_X,
-        TEX_Y,
-        SIZE,
-
-        POINT_FIRST = POINT_X,
-        COLOR_FIRST = COLOR_R,
-        TEX_FIRST = TEX_X
-    };
-
-    static const size_t sStrideSize = SIZE * Types::sVertexElementInBytes;
-    static const size_t sPointPointer = POINT_FIRST * Types::sVertexElementInBytes;
-    static const size_t sColorPointer = COLOR_FIRST * Types::sVertexElementInBytes;
-    static const size_t sTexturePointer = TEX_FIRST * Types::sVertexElementInBytes;
-
-    AttribArrayPtr(GLfloat* data)
-        : mPointer(data)
-    {}
-    
-    inline Types::VertexElement& X()     { return mPointer[POINT_X]; }
-    inline Types::VertexElement& Y()     { return mPointer[POINT_Y]; }
-    inline Types::VertexElement& Z()     { return mPointer[POINT_Z]; }
-
-    inline Types::VertexElement& Red()   { return mPointer[COLOR_R]; }
-    inline Types::VertexElement& Green() { return mPointer[COLOR_G]; }
-    inline Types::VertexElement& Blue()  { return mPointer[COLOR_B]; }
-
-    inline Types::VertexElement& TextureX() { return mPointer[TEX_X]; }
-    inline Types::VertexElement& TextureY() { return mPointer[TEX_Y]; }
-
-    static const size_t ElementCount() { return eAttrib::SIZE; }
-
-};
-
-namespace Types { using TextureMap = std::map<std::string, TextureInfo>; }    // Ordered set of texture names/info
+using TextureMap = std::map<std::string, Types::TextureInfo>;  // Ordered set of texture names/info
 
 class TextureLoader
 {
@@ -113,17 +18,17 @@ private:
     
     TextureLoader();
 
-    Types::TextureMap mTextureList;
+    TextureMap mTextureList;
 
     static TextureLoader* mInstance;
 
-    static TextureInfo& iAddTexture(const char* path, const char* name = "unnamed");
+    static Types::TextureInfo& iAddTexture(const char* path, const char* name = "unnamed");
     static const bool iRemoveTexture(const char* name);
     static const GLuint iGetTexture(const char* name);
-    static Types::TextureMap& iGetTextureList();
+    static TextureMap& iGetTextureList();
 
 public:
-    static inline TextureInfo& AddTexture(const char* path, const char* name = "unnamed") 
+    static inline Types::TextureInfo& AddTexture(const char* path, const char* name = "unnamed") 
     {
         return iAddTexture(path, name);
     }
@@ -135,7 +40,7 @@ public:
     {
         return iGetTexture(name);
     }
-    static inline Types::TextureMap& GetTextureList()
+    static inline TextureMap& GetTextureList()
     {
         return iGetTextureList();
     }
@@ -143,18 +48,27 @@ public:
 
 class GraphicData
 {
+    using VertexVector  = std::vector<Types::Float>;
+    using IndexVector   = std::vector<Types::UInt>;
+    using TextureVector = std::vector<Types::TextureInfo*>;
+
     GLenum mDrawMode = GL_TRIANGLES;
 
-    std::vector<Types::VertexElement> mVertices;
-    std::vector<Types::IndexElement> mIndices;
-    std::vector<TextureInfo*> mTextures;
-    Types::MatrixTransform mMatrixTransform;
+    VertexVector mVertices;
+    IndexVector mIndices;
+    TextureVector mTextures;
+    Types::Matrix44 mMatrixTransform;
 
 public:
     GraphicData(std::initializer_list<GLfloat> vertices, std::initializer_list<GLuint> indices, std::initializer_list<const char*> texturePaths = {});
 
     void SetBuffers(GLuint& vertexBuffer, GLuint& elementBuffer);
     //void SetTextures()
+
+    VertexVector& GetVertexArray()
+    {
+        return mVertices;
+    }
 
     inline const size_t GetIndexCount() { return mIndices.size(); }
 };
@@ -176,8 +90,8 @@ public:
 
     Program(const char* vertexPath, const char* fragmentPath);
     void Use() const;
-    void SetMatrix4f(const char* name, const Types::MatrixTransform& matrix);
-    const bool LoadTextureToGL(TextureInfo& texture);
+    void SetMatrix4f(const char* name, const Types::Matrix44& matrix);
+    const bool LoadTextureToGL(Types::TextureInfo& texture);
     void LoadAllTexturesToGL();
     void Draw(GraphicData& graphicData);
 };
@@ -186,15 +100,29 @@ public:
 
 class Camera
 {
-    Types::Vector mPosition;
-    Types::MatrixTransform mView;
+    Types::Vector3 mPosition;
+    Types::Matrix44 mView;
 
 public:
     Camera();
 
-    void Move(const Types::Vector& direction);
+    void Move(const Types::Vector3& direction);
+    void RotateAround(const Types::Vector3 rotationVector)
+    {
+        mView = glm::translate(mView, rotationVector);
+        mView = glm::rotate(mView, 0.10f, rotationVector);
+        mView = glm::translate(mView, -rotationVector);
 
-    const Types::MatrixTransform& GetView() const;
+    }
+    inline void ZoomIn() 
+    { 
+        mView = glm::scale(mView, Types::Vector3(1.1));
+    }
+    inline void ZoomOut()
+    {
+        mView = glm::scale(mView, Types::Vector3(0.9));
+    }
+    const Types::Matrix44& GetView() const;
 };
 
 } // namespace System 
