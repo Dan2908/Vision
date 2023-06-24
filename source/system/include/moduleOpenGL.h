@@ -62,6 +62,8 @@ class GraphicData
 public:
     GraphicData(std::initializer_list<GLfloat> vertices, std::initializer_list<GLuint> indices, std::initializer_list<const char*> texturePaths = {});
 
+
+
     void SetBuffers(GLuint& vertexBuffer, GLuint& elementBuffer);
     //void SetTextures()
 

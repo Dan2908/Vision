@@ -142,6 +142,7 @@
     <ClInclude Include="source\system\include\moduleOpenGL.h" />
     <ClInclude Include="source\system\include\moduleSDL.h" />
     <ClInclude Include="source\system\include\types.h" />
+    <ClInclude Include="source\testing\include\testing.h" />
     <ClInclude Include="source\thirdparty\include\thirdparty.h" />
   </ItemGroup>
   <ItemGroup>

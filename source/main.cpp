@@ -6,120 +6,12 @@
 #include <system/include/moduleOpenGL.h>
 #include <core/include/vmemory.h>
 
-using namespace Vision;
+#include <testing/include/testing.h>
 
+using namespace Vision;
 static const char* grassPath = "texture\\grassPattern.jpg";
 
 int main(int arc, char* argv[]) 
 {
-	System::GraphicData Cube(
-	{/*	   X      Y      Z     R     G     B   TxX	 TxY    */
-
-		-0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f,  // front left  top
-		 0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f,  // front right top
-		-0.5f, -0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f,	// front left  bottom
-		 0.5f, -0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f,  // front right bottom
-		-0.5f,  0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f,// back  left  top
-		 0.5f,  0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f,// back  right top
-		-0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f,// back  left  bottom
-		 0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f,// back  right bottom
-	},
-	{
-		//Front
-		0, 1, 2,
-		1, 2, 3,
-		//Back
-		4, 5, 6,
-		5, 6, 7,
-		//Top
-		4, 5, 0,
-		5, 0, 1,
-		//Bottom
-		2, 3, 6,
-		3, 6, 7,
-		//Left
-		4, 0, 6,
-		0, 6, 2,
-		//Right
-		1, 5, 3,
-		5, 3, 7
-
-	},
-	{
-	"texture\\grassPattern.jpg"
-	});
-
-	System::System::Start();
-	System::Window window(800, 600);
-
-	System::Program program("shaders\\default_vs.glsl", "shaders\\default_fs.glsl");
-	program.Use();
-
-	glm::mat4 model = glm::identity<glm::mat4>();
-	glm::mat4 projection = glm::perspective(glm::radians(45.0f), 800.0f / 600.0f, 0.1f, 700.0f);
-
-	System::Camera camera;
-
-	System::Event& event = System::EventManager::PollEvent();
-
-	program.LoadAllTexturesToGL();
-
-	bool quit = false;
-	bool refresh = true;
-
-	while (!quit)
-	{
-		if (refresh)
-		{
-			program.SetMatrix4f("view", camera.GetView());
-			program.SetMatrix4f("projection", projection);
-			program.SetMatrix4f("model", model);
-
-			program.Draw(Cube);
-			window.Swap();
-		}
-
-		refresh = true;
-
-		switch (event.GetAction())
-		{
-		case System::eActions::QUIT:
-			quit = true;
-			break;
-
-		case System::eActions::LEFT:
-			camera.RotateAround(System::Types::Vector3(0.0f, 0.01f, 0.0f));
-			break;
-
-		case System::eActions::RIGHT:
-			camera.RotateAround(System::Types::Vector3(0.0f, -0.01f, 0.0f));
-			break;
-
-		case System::eActions::UP:
-			camera.RotateAround(System::Types::Vector3(0.01f, 0.0f, 0.0f));
-			break;
-
-		case System::eActions::DOWN:
-			camera.RotateAround(System::Types::Vector3(-0.01f, 0.0f, 0.0f));
-			break;
-
-		case System::eActions::PLUS:
-			camera.ZoomIn();
-			break;
-
-		case System::eActions::MINUS:
-			camera.ZoomOut();
-			break;
-
-		default:
-			refresh = false;
-		}
-
-		System::EventManager::PollEvent();
-	}
-
-	window.~Window();
-	System::System::Quit();
-
-	return 0;
+	return Testing::Run();
 }
