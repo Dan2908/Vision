@@ -1,8 +1,8 @@
-#include <system/include/types.h>
 #include <common/include/common.h>
-#
+#include <system/include/moduleSDL.h>
+#include <system/include/moduleOpenGL.h>
+#include <system/include/types.h>
 
-	
 namespace Vision 
 {
 namespace Testing
