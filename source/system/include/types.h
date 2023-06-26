@@ -19,7 +19,7 @@ typedef std::vector<Float> VertexVector;
 typedef std::vector<UInt> IndexVector;
 
 static const Vector3 VECTOR_UP = Vector3(0.0f, 1.0f, 0.0f);
-   
+
 namespace VertexConst
 {
     enum eKey

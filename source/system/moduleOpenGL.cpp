@@ -2,6 +2,7 @@
 
 #include <common/include/common.h>
 #include <fstream>
+#include <graphic.h>
 #include <iostream>
 #include <thirdparty/include/thirdparty.h>
 
@@ -9,46 +10,6 @@ namespace Vision
 { 
 namespace System
 {
-
-//********************************
-//     Class GraphicData
-//********************************
-//----------------------------------------------------------------
-GraphicData::GraphicData(std::initializer_list<GLfloat> vertices, std::initializer_list<GLuint> indices, std::initializer_list<const char*> texturePaths)
-    : mVertices(vertices)
-    , mIndices(indices)
-    , mTextures()
-    , mMatrixTransform(1.0f)
-{
-    if (texturePaths.size() > 0)
-    {
-        for (const char* path : texturePaths)
-        {
-            mTextures.push_back(&TextureLoader::AddTexture(path));
-        }
-    }
-}
-
-//----------------------------------------------------------------
-void GraphicData::SetBuffers(GLuint& vertexBuffer, GLuint& elementBuffer)
-{
-    // feed Vertex Buffer
-    glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
-    glBufferData(GL_ARRAY_BUFFER, mVertices.size() * Types::VertexConst::sVertexElementInBytes, mVertices.data(), GL_DYNAMIC_DRAW);
-    // feed Element Buffer
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementBuffer);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, mIndices.size() * Types::VertexConst::sIndexElementBytes, mIndices.data(), GL_STATIC_DRAW);
-
-    const size_t nTextures = mTextures.size();
-
-    assert(nTextures < 32);
-
-    for (int i = 0; i < nTextures; ++i)
-    {
-        glActiveTexture(GL_TEXTURE0 + i);
-        glBindTexture(GL_TEXTURE_2D, mTextures.at(i)->id);
-    }
-}
 
 //********************************
 //     Class Program
@@ -148,16 +109,16 @@ void Program::Use() const
 }
 
 //----------------------------------------------------------------
-void Program::Draw(GraphicData& graphicData)
+void Program::Draw(const DrawingInfo drawingInfo)
 {
     glViewport(0, 0, 800, 600);
     glClearColor(0.5f, 0.5f, 0.5f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    graphicData.SetBuffers(mVertexArrayBuffer, mElementArrayBuffer);
+    //NOTE: Set the buffers in the scenario
 
     glBindVertexArray(mVertexArrayObject);
-    glDrawElements(GL_TRIANGLES, graphicData.GetIndexCount(), GL_UNSIGNED_INT, 0);
+    glDrawElements(drawingInfo.drawType, drawingInfo.indexCount, GL_UNSIGNED_INT, 0);
 }
 
 //----------------------------------------------------------------
@@ -195,97 +156,11 @@ const bool Program::LoadTextureToGL(Types::TextureInfo& texture)
 //----------------------------------------------------------------
 void Program::LoadAllTexturesToGL()
 {
-    TextureMap& texList = TextureLoader::GetTextureList();
+    Graphic::TextureMap& texList = Graphic::TextureLoader::GetTextureList();
     for (auto& tex : texList)
     {
         LoadTextureToGL(tex.second);
     }
-}
-
-//********************************
-//     Class TextureLoader
-//********************************
-
-TextureLoader* TextureLoader::mInstance = new TextureLoader();
-//----------------------------------------------------------------
-TextureLoader::TextureLoader()
-    : mTextureList()
-{
-}
-
-//----------------------------------------------------------------
-Types::TextureInfo& TextureLoader::iAddTexture(const char* path, const char* name /*= "unnamed"*/)
-{
-    // No repeated names allowed, automatically renamed at this point.
-    std::string rename(name);
-    int renameIndex = 1;
-    TextureMap& texList = mInstance->mTextureList;
-
-    while (texList.find(rename) != texList.end())
-    {
-        rename.assign(name);
-        rename.append(std::to_string(renameIndex++));
-    }
-    // emplace
-    texList[rename] = *new Types::TextureInfo(path);
-
-    return texList[rename];
-}
-
-
-//----------------------------------------------------------------
-const bool TextureLoader::iRemoveTexture(const char* name)
-{
-    TextureMap& texList = mInstance->mTextureList;
-
-    if (texList.find(name) != texList.end())
-    {
-        texList.erase(name);
-        return true;
-    }
-    return false;
-}
-
-//----------------------------------------------------------------
-const GLuint TextureLoader::iGetTexture(const char* name)
-{
-    auto tex = mInstance->mTextureList.find(name);
-    if (tex != mInstance->mTextureList.end())
-    {
-        return tex->second.id;
-    }
-
-    return -1;
-}
-
-//----------------------------------------------------------------
-TextureMap& TextureLoader::iGetTextureList()
-{
-    return mInstance->mTextureList;
-}
-
-//********************************
-//     Class Camera
-//********************************
-//----------------------------------------------------------------
-Camera::Camera()
-    : mPosition(0.0f, 0.0f, 10.0f)
-    , mView()
-{
-    mView = glm::lookAt(mPosition, Types::Vector3(0.0f), Types::VECTOR_UP);
-}
-
-//----------------------------------------------------------------
-void Camera::Move(const Types::Vector3& direction)
-{
-    mPosition += direction;
-    mView = glm::lookAt(mPosition, Types::Vector3(0.0f), Types::VECTOR_UP);
-}
-
-//----------------------------------------------------------------
-const Types::Matrix44& Camera::GetView() const
-{
-    return mView;
 }
 
 } // namespace System
