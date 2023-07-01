@@ -2,7 +2,7 @@
 
 #include <common/include/common.h>
 #include <fstream>
-#include <graphic.h>
+#include <graphic/include/graphic.h>
 #include <iostream>
 #include <thirdparty/include/thirdparty.h>
 

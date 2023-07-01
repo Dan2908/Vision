@@ -51,13 +51,14 @@ class GraphicData
     using VertexVector = std::vector<System::Types::Float>;
     using IndexVector = std::vector<System::Types::UInt>;
     using TextureVector = std::vector<System::Types::TextureInfo*>;
+    using Matrix = System::Types::Matrix44;
 
     GLenum mDrawMode = GL_TRIANGLES;
 
     VertexVector mVertices;
     IndexVector mIndices;
     TextureVector mTextures;
-    System::Types::Matrix44 mMatrixTransform;
+    Matrix mMatrixTransform;
 
 public:
     GraphicData();
@@ -72,6 +73,16 @@ public:
 
     inline VertexVector& GetVertexArray() { return mVertices; }
     inline const size_t GetIndexCount() const { return mIndices.size(); }
+
+    inline const Matrix& GetModel() { return mMatrixTransform; }
+    inline void RotateModel(const System::Types::Float angle, const System::Types::Vector3 axis)
+    {
+        glm::rotate(mMatrixTransform, angle, axis);
+    }
+    inline void TranslateModel(const System::Types::Vector3 position)
+    {
+        glm::translate(mMatrixTransform, position);
+    }
 };
 
 } // namespace Graphic 

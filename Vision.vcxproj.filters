@@ -39,10 +39,10 @@
     <ClInclude Include="source\fileManager.h">
       <Filter>Archivos de encabezado</Filter>
     </ClInclude>
-    <ClInclude Include="source\graphic.h">
+    <ClInclude Include="source\scenario.h">
       <Filter>Archivos de encabezado</Filter>
     </ClInclude>
-    <ClInclude Include="source\scenario.h">
+    <ClInclude Include="source\graphic\graphic.h">
       <Filter>Archivos de encabezado</Filter>
     </ClInclude>
   </ItemGroup>
@@ -68,10 +68,10 @@
     <ClCompile Include="source\fileManager.cpp">
       <Filter>Archivos de origen</Filter>
     </ClCompile>
-    <ClCompile Include="source\graphic.cpp">
+    <ClCompile Include="source\scenario.cpp">
       <Filter>Archivos de origen</Filter>
     </ClCompile>
-    <ClCompile Include="source\scenario.cpp">
+    <ClCompile Include="source\graphic\graphic.cpp">
       <Filter>Archivos de origen</Filter>
     </ClCompile>
   </ItemGroup>

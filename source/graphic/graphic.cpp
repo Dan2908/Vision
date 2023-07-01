@@ -1,4 +1,4 @@
-#include "graphic.h"
+#include <graphic/include/graphic.h>
 #include "fileManager.h"
 #include <sstream>
 

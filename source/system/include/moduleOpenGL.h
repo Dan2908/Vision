@@ -5,7 +5,7 @@
 #include <vector>
 #include <system/include/types.h>
 #include <fileManager.h>
-#include <graphic.h>
+#include <graphic/include/graphic.h>
 
 namespace Vision
 {

@@ -2,7 +2,7 @@
 #include <system/include/moduleSDL.h>
 #include <system/include/moduleOpenGL.h>
 #include <system/include/types.h>
-#include <graphic.h>
+#include <graphic/include/graphic.h>
 #include <scenario.h>
 
 namespace Vision 

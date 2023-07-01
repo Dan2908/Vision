@@ -140,7 +140,7 @@
     <ClInclude Include="source\common\include\common.h" />
     <ClInclude Include="source\core\include\vmemory.h" />
     <ClInclude Include="source\fileManager.h" />
-    <ClInclude Include="source\graphic.h" />
+    <ClInclude Include="source\graphic\graphic.h" />
     <ClInclude Include="source\scenario.h" />
     <ClInclude Include="source\system\include\moduleOpenGL.h" />
     <ClInclude Include="source\system\include\moduleSDL.h" />
@@ -152,7 +152,7 @@
     <ClCompile Include="source\common\common.cpp" />
     <ClCompile Include="source\core\vmemory.cpp" />
     <ClCompile Include="source\fileManager.cpp" />
-    <ClCompile Include="source\graphic.cpp" />
+    <ClCompile Include="source\graphic\graphic.cpp" />
     <ClCompile Include="source\main.cpp" />
     <ClCompile Include="source\scenario.cpp" />
     <ClCompile Include="source\system\moduleOpenGL.cpp" />

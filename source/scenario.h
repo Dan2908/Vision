@@ -1,6 +1,6 @@
 #pragma once
 
-#include <graphic.h>
+#include <graphic/include/graphic.h>
 #include <system/include/types.h>
 #include <thirdparty.h>
 #include <vector>
