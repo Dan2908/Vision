@@ -52,8 +52,10 @@ class TestInstance
 {
 	static TestInstance mInstance;
 	
+	using Programs = std::vector<System::Program*>;
+
+	Programs mPrograms;
 	System::Window* mWindow;
-	System::Program* mProgram;
 	Scenario::Scenario mScenario;
 
 	glm::mat4 mModel = glm::identity<glm::mat4>();
@@ -61,14 +63,18 @@ class TestInstance
 
 	TestInstance() : mScenario()
 	{}
+
+	inline void NewProgram(const char* vPath, const char* fPath) { mInstance.mPrograms.push_back(new System::Program(vPath, fPath)); }
 public:
 	static void Initialize()
 	{
 		System::System::Start();
 
 		mInstance.mWindow = new System::Window(800, 600, "Vision - Debug - Test Window");
-		mInstance.mProgram = new System::Program("shaders\\default_vs.glsl", "shaders\\default_fs.glsl");
+		
+		mInstance.NewProgram("shaders\\default_vs.glsl", "shaders\\default_fs.glsl");
 	}
+
 	static void Terminate()
 	{
 		mInstance.mWindow->~Window();
@@ -82,11 +88,13 @@ public:
 	{
 		Initialize();
 
+		System::Program& defaultShader = *mInstance.mPrograms.at(0);
+
 		Scenario::Object cube(ShapeConst::sCube);
 		mInstance.mScenario.LoadObject(cube);
 
-		mInstance.mProgram->Use();
-		mInstance.mProgram->LoadAllTexturesToGL();
+		defaultShader.Use();
+		defaultShader.LoadAllTexturesToGL();
 
 		System::Event& event = System::EventManager::PollEvent();
 
@@ -98,18 +106,16 @@ public:
 		{
 			if (refresh)
 			{
-				mInstance.mScenario.SetAllBuffers(mInstance.mProgram->GetVertexBufferID(), mInstance.mProgram->GetElementArrayBufferID());
+				mInstance.mScenario.SetAllBuffers(defaultShader.GetVertexBufferID(), defaultShader.GetElementArrayBufferID());
 
-				mInstance.mProgram->SetMatrix4f("view", mInstance.mScenario.GetCurrentCameraView());
-				mInstance.mProgram->SetMatrix4f("projection", mInstance.mProjection);
-				mInstance.mProgram->SetMatrix4f("model", mInstance.mModel);
+				defaultShader.SetMatrix4f("view", mInstance.mScenario.GetCurrentCameraView());
+				defaultShader.SetMatrix4f("projection", mInstance.mProjection);
+				defaultShader.SetMatrix4f("model", mInstance.mModel);
+				defaultShader.Draw(mInstance.mScenario.GetDrawingInfo());
 
-				
-				mInstance.mProgram->Draw(mInstance.mScenario.GetDrawingInfo());
 				mInstance.mWindow->Swap();
 
 				mInstance.mScenario.GetCurrentCamera();
-
 			}
 			refresh = true;
 

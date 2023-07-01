@@ -25,8 +25,6 @@ Program::Program(const char* vertexPath, const char* fragmentPath)
     LinkProgram(vertexID, fragmentID);
     CleanShaders(vertexID, fragmentID);
 
-    glEnable(GL_DEPTH_TEST);
-
     GenerateBuffers();
 }
 
@@ -111,7 +109,6 @@ void Program::Use() const
 //----------------------------------------------------------------
 void Program::Draw(const DrawingInfo drawingInfo)
 {
-    glViewport(0, 0, 800, 600);
     glClearColor(0.5f, 0.5f, 0.5f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
