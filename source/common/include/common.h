@@ -7,6 +7,14 @@
 #define LOG_STDERR(x) std::cerr << x << std::endl
 #define LOG_STDOUT(x) std::cout << x << std::endl
 
+#define GETSET_MEMBER(type, name)\
+ inline const type Get##name() { return m##name; }\
+ inline void Set##name(##const type value) { m##name = value; }
+
+#define GETSET_ARRAY_AT(type, arr, index, name)\
+ inline const type Get##name() { return arr.at(index); }\
+ inline void Set##name(##const type value) { arr.at(index) = value; }
+
 namespace Vision
 {
 namespace Util

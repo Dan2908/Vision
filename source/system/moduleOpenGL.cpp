@@ -160,5 +160,63 @@ void Program::LoadAllTexturesToGL()
     }
 }
 
+namespace GL
+{
+//----------------------------------------------------------------
+const bool CheckCompileStatus(Types::UInt shader)
+{
+    GLint success;
+    GLchar infoLog[1024];
+
+    glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
+    if (!success)
+    {
+        glGetShaderInfoLog(shader, 1024, NULL, infoLog);
+        LOG_STDERR(" Shader compilation error: " << infoLog);
+    }
+
+    return success;
+}
+
+//----------------------------------------------------------------
+const bool CheckLinkStatus(Types::UInt program)
+{
+    GLint success;
+    GLchar infoLog[1024];
+
+    glGetProgramiv(program, GL_LINK_STATUS, &success);
+    if (!success)
+    {
+        glGetProgramInfoLog(program, 1024, NULL, infoLog);
+        LOG_STDERR("Linking error: " << infoLog);
+    }
+
+    return success;
+}
+
+//----------------------------------------------------------------
+const Types::UInt CompileShader(const char* code, const Types::UInt type)
+{
+    Types::UInt id = glCreateShader(type);
+    glShaderSource(id, 1, &code, NULL);
+    glCompileShader(id);
+
+    return CheckCompileStatus(id) ? id : -1;
+}
+
+//----------------------------------------------------------------
+void CreateProgram(Types::UInt programID, const Types::UInt vertexShaderID, const Types::UInt fragmentShaderID)
+{
+    programID = glCreateProgram();
+    glAttachShader(programID, vertexShaderID);
+    glAttachShader(programID, fragmentShaderID);
+    glLinkProgram(programID);
+    CheckLinkStatus(programID);
+
+    glDeleteShader(vertexShaderID);
+    glDeleteShader(fragmentShaderID);
+}
+
+} // namespace GL
 } // namespace System
 } // namespace Vision

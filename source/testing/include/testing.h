@@ -1,3 +1,5 @@
+#pragma once
+
 #include <common/include/common.h>
 #include <system/include/moduleSDL.h>
 #include <system/include/moduleOpenGL.h>

@@ -1,4 +1,5 @@
 #pragma once
+
 #include <thirdparty.h>
 
 namespace Vision
